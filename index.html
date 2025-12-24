@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>至尊娱乐 - 斗地主|麻将|猜红黑|抛硬币 双模式平台</title>
+    <style>
+        * {margin: 0;padding: 0;box-sizing: border-box;font-family: "微软雅黑", sans-serif;}
+        body {background: linear-gradient(135deg, #090019, #190038, #290058);min-height: 100vh;color: #fff;overflow-x: hidden;}
+        /* 苹果兼容弹窗 替换所有alert/prompt/confirm */
+        #tipsBox {position: fixed;top: 50%;left: 50%;transform: translate(-50%,-50%);padding: 20px 30px;background: #333;color: #fff;border-radius: 8px;font-size: 16px;z-index: 99999;display: none;text-align: center;min-width: 280px;}
+        #inputBox {position: fixed;top: 50%;left: 50%;transform: translate(-50%,-50%);padding: 30px;background: linear-gradient(145deg, #121228, #181838);border: 3px solid #ffd700;border-radius: 12px;font-size: 16px;z-index: 99999;display: none;text-align: center;min-width: 300px;}
+        #inputBox input {width: 100%;padding:15px;border-radius:8px;border:2px solid #ffd700;background:#090919;color:#fff;margin:15px 0;outline:none;font-size:16px;}
+        #inputBox .btn-group {display:flex;justify-content:space-around;margin-top:10px;}
+        #confirmBox {position: fixed;top: 50%;left: 50%;transform: translate(-50%,-50%);padding: 30px;background: linear-gradient(145deg, #121228, #181838);border: 3px solid #ffd700;border-radius: 12px;font-size: 16px;z-index: 99999;display: none;text-align: center;min-width: 300px;}
+        /* 页面容器 */
+        .login-container {width: 100%;min-height: 100vh;padding: 20px;display: flex;align-items: center;justify-content: center;}
+        .game-container {width: 100%;min-height: calc(100vh - 80px);padding: 20px;display: flex;align-items: center;justify-content: center;}
+        .card {background: linear-gradient(145deg, #121228, #181838);border-radius: 24px;border: 3px solid #ffd700;box-shadow: 0 0 40px #ffd70070, inset 0 0 25px #ffffff20;backdrop-filter: blur(15px);padding: 35px;margin: 15px;width: 100%;max-width: 1200px;}
+        /* 按钮样式 */
+        .btn {background: linear-gradient(90deg, #ffd700, #ff9f00);border: none;border-radius: 12px;padding: 16px 32px;color: #000;font-size: 18px;font-weight: bold;cursor: pointer;margin: 10px;transition: all 0.3s;}
+        .btn:hover {transform: scale(1.06);box-shadow: 0 0 25px #ffd700;}
+        .btn-danger {background: linear-gradient(90deg, #ff4757, #ff3838);color: #fff;}
+        .btn-primary {background: linear-gradient(90deg, #00d2ff, #3a7bd5);color: #fff;}
+        .btn-single {background: linear-gradient(90deg, #00ff9d, #00c875);color: #fff;padding:20px 0;font-size:22px;margin:8px 0;width:48%;font-weight: bold;border-radius:12px;}
+        .btn-multi {background: linear-gradient(90deg, #7b68ee, #4169e1);color: #fff;padding:20px 0;font-size:22px;margin:8px 0;width:48%;font-weight: bold;border-radius:12px;}
+        /* 输入框样式 */
+        .input {width: 100%;padding: 18px;border-radius: 12px;border: 2px solid #ffd700;background: #090919;color: #fff;font-size: 18px;margin: 12px 0;outline: none;}
+        .input:focus {border-color: #ff9f00;box-shadow: 0 0 15px #ff9f0050;}
+        /* 文字样式 */
+        .title {text-align: center;font-size: 40px;background: linear-gradient(90deg, #ffd700, #fff);-webkit-background-clip: text;color: transparent;margin: 20px 0;font-weight: bold;text-shadow: 0 0 20px #ffd70050;}
+        .sub-title {font-size: 26px;color: #ffd700;margin: 15px 0;text-align: center;}
+        .info {font-size: 18px;margin: 10px;color: #ccc;line-height: 1.6;}
+        .gold {color: #ffd700;font-weight: bold;}
+        .vip {color: #ff4757;font-weight: bold;}
+        .code {color: #00d2ff;font-weight: bold;letter-spacing: 2px;}
+        /* 游戏布局 */
+        .game-grid {display: grid;grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));gap: 20px;margin: 30px 0;width: 100%;}
+        .game-item {background: linear-gradient(145deg, #1a1a2e, #16213e);border-radius: 18px;border: 2px solid #ffd700;padding: 28px;text-align: center;cursor: pointer;transition: all 0.3s;}
+        .game-item:hover {transform: translateY(-12px);box-shadow: 0 12px 35px #ffd70050;}
+        .mode-box {display:flex;justify-content:space-between;align-items:center;width:100%;margin:20px 0;flex-wrap:wrap;}
+        .room-box {display: flex;flex-direction: column;align-items: center;margin: 20px 0;width: 100%;}
+        /* 牌型核心样式 - 点击选中高亮 */
+        .card-item {width: 60px;height: 90px;background: linear-gradient(145deg, #fff, #f0f0f0);border-radius: 8px;border: 1px solid #ccc;margin: 5px;display: inline-flex;justify-content: center;align-items: center;font-size: 20px;font-weight: bold;color: #000;box-shadow: 0 2px 5px #0005;cursor: pointer;transition: all 0.3s;}
+        .card-item.selected {border: 3px solid #ffd700;box-shadow: 0 0 15px #ffd700;transform: scale(1.08);}
+        .mahjong-item {width: 60px;height: 80px;background: linear-gradient(145deg, #fff, #f9f9f9);border-radius: 5px;border: 1px solid #ccc;margin: 5px;display: inline-flex;justify-content: center;align-items: center;font-size: 18px;font-weight: bold;color: #000;cursor: pointer;transition: all 0.3s;}
+        .mahjong-item.selected {border: 3px solid #ffd700;box-shadow: 0 0 15px #ffd700;transform: scale(1.08);}
+        .operation-btn {display: flex;flex-wrap: wrap;justify-content: center;margin: 20px 0;width: 100%;}
+        /* 充值样式 */
+        .charge-grid {display: grid;grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));gap: 20px;margin: 20px 0;width: 100%;}
+        .charge-item {background: linear-gradient(145deg, #2c3e50, #34495e);border-radius: 15px;border: 2px solid #ffd700;padding: 22px;text-align: center;cursor: pointer;transition: all 0.3s;}
+        .charge-item:hover {transform: scale(1.05);box-shadow:0 0 20px #ffd700;}
+        /* 个人主页 */
+        .user-center {display: flex;flex-wrap: wrap;align-items: center;justify-content: space-between;margin-bottom:30px;border-bottom:2px solid #ffd70030;padding-bottom:25px;}
+        .user-avatar {width:130px;height:130px;border-radius:50%;background:linear-gradient(145deg,#ffd700,#ff9f00);display:flex;justify-content:center;align-items:center;font-size:60px;margin:10px;box-shadow:0 0 30px #ffd70070;}
+        .user-info {flex:1;margin:10px;}
+        .user-data {display:grid;grid-template-columns: repeat(auto-fit,minmax(200px,1fr));gap:18px;margin:25px 0;width:100%;}
+        .data-item {background:linear-gradient(145deg,#1a1a2e,#16213e);border-radius:12px;padding:20px;border:1px solid #ffd700;}
+        .vip-rule {background:#090919;border-radius:12px;padding:22px;margin:20px 0;border:1px solid #ffd700;}
+        /* 激活码样式 */
+        .code-box {background: linear-gradient(145deg, #00d2ff30, #181838);border:2px solid #00d2ff;border-radius:12px;padding:20px;margin:20px 0;text-align:center;}
+        /* 底部导航 */
+        .footer-nav {position: fixed;bottom:0;left:0;width:100%;height:80px;background: linear-gradient(145deg, #121228, #090019);border-top:3px solid #ffd700;display:flex;justify-content: space-around;align-items:center;z-index:9999;box-shadow: 0 -5px 30px #ffd70050;}
+        .nav-item {width:33.33%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;cursor:pointer;color:#fff;transition:all 0.3s;font-size:14px;}
+        .nav-item:hover {color:#ffd700;}
+        .nav-item i {font-size:28px;margin-bottom:5px;}
+        /* 隐藏类 */
+        .hidden {display: none !important;}
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .title {font-size: 28px;}
+            .sub-title {font-size: 22px;}
+            .btn {padding: 12px 20px;font-size: 16px;}
+            .btn-single,.btn-multi {width:100%;font-size:20px;padding:18px 0;}
+            .card-item {width: 40px;height: 60px;font-size: 16px;}
+            .mahjong-item {width: 40px;height: 60px;font-size: 14px;}
+            .user-avatar {width:90px;height:90px;font-size:40px;}
+            .charge-grid {grid-template-columns: repeat(auto-fit,minmax(140px,1fr));}
+            .footer-nav {height:70px;}
+            .nav-item i {font-size:24px;}
+            .game-container {min-height: calc(100vh - 70px);}
+        }
+        @media (max-width: 480px) {
+            .game-container {padding: 10px;}
+            .card {padding: 20px;}
+            .title {font-size: 24px;}
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 苹果兼容弹窗组件 -->
+    <div id="tipsBox"></div>
+    <div id="inputBox">
+        <p id="inputText">请输入本局押注金币数（≥100）</p>
+        <input type="number" id="inputVal" value="100" min="100">
+        <div class="btn-group">
+            <button class="btn" style="padding:8px 16px;" onclick="confirmInput()">确认</button>
+            <button class="btn btn-danger" style="padding:8px 16px;" onclick="cancelInput()">取消</button>
+        </div>
+    </div>
+    <div id="confirmBox">
+        <p id="confirmText">确定认输？将扣除押注金币</p>
+        <div class="btn-group">
+            <button class="btn" style="padding:8px 16px;" onclick="confirmOk()">确定</button>
+            <button class="btn btn-danger" style="padding:8px 16px;" onclick="confirmNo()">取消</button>
+        </div>
+    </div>
+    <!-- 注册页面 -->
+    <div id="register-page" class="login-container">
+        <div class="card">
+            <h2 class="title">至尊娱乐 ✦ 账号注册</h2>
+            <input type="text" id="reg-name" class="input" placeholder="请输入用户名" required>
+            <input type="password" id="reg-pwd" class="input" placeholder="请输入登录密码（6位及以上）" required>
+            <input type="text" id="reg-code" class="input" placeholder="请输入激活码" required>
+            <div class="code-box"><span class="info">官方通用激活码：</span><span class="code">ylm890kz</span></div>
+            <button class="btn" onclick="register()">完成注册</button>
+            <p class="info" style="text-align: center;margin-top: 20px;">已有账号？<span style="color:#ffd700;cursor:pointer;" onclick="showLogin()">立即登录</span></p>
+        </div>
+    </div>
+    <!-- 登录页面 -->
+    <div id="login-page" class="login-container hidden">
+        <div class="card">
+            <h2 class="title">至尊娱乐 ✦ 账号登录</h2>
+            <input type="text" id="login-name" class="input" placeholder="请输入用户名" required>
+            <input type="password" id="login-pwd" class="input" placeholder="请输入登录密码" required>
+            <button class="btn" onclick="login()">立即登录</button>
+            <p class="info" style="text-align: center;margin-top: 20px;">暂无账号？<span style="color:#ffd700;cursor:pointer;" onclick="showRegister()">点击注册</span></p>
+        </div>
+    </div>
+    <!-- 游戏主页 -->
+    <div id="main-page" class="game-container hidden">
+        <div class="card">
+            <div style="display: flex;justify-content: space-between;align-items: center;margin-bottom: 30px;flex-wrap: wrap;">
+                <div>
+                    <p class="info">昵称：<span id="user-name" class="gold"></span></p>
+                    <p class="info">金币：<span id="user-gold" class="gold"></span></p>
+                    <p class="info">VIP等级：<span id="user-vip" class="vip"></span></p>
+                </div>
+                <button class="btn btn-danger" onclick="logout()">退出登录</button>
+            </div>
+            <h2 class="title">🎮 游戏大厅</h2>
+            <div class="game-grid">
+                <div class="game-item" onclick="showGameMode('doudizhu')">
+                    <div style="font-size: 40px;">♠️</div>
+                    <h3>斗地主</h3>
+                    <p class="info">选牌出牌 | 牌型校验 | 输赢扣金币</p>
+                </div>
+                <div class="game-item" onclick="showGameMode('majiang')">
+                    <div style="font-size: 40px;">🀄️</div>
+                    <h3>麻将</h3>
+                    <p class="info">选牌碰杠 | 胡牌赢金币</p>
+                </div>
+                <div class="game-item" onclick="showGameMode('caihonghei')">
+                    <div style="font-size: 40px;">❤️⚫</div>
+                    <h3>猜红黑</h3>
+                    <p class="info">押注开奖 | 猜错扣金币</p>
+                </div>
+                <div class="game-item" onclick="showGameMode('coin')">
+                    <div style="font-size: 40px;">🪙</div>
+                    <h3>抛硬币</h3>
+                    <p class="info">正反押注 | 猜错扣金币</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 游戏模式选择页 -->
+    <div id="mode-page" class="game-container hidden">
+        <div class="card">
+            <h2 class="title" id="mode-title">斗地主 ✦ 玩法选择</h2>
+            <div class="mode-box">
+                <button class="btn-single" onclick="showInputBox()">单人匹配</button>
+                <button class="btn-multi" onclick="startMultiGame()"><i class="fas fa-users"></i> 多人联机</button>
+            </div>
+            <p class="info" style="text-align:center;">单人匹配：一键开局，NPC智能陪玩<br>多人联机：创建/加入房间，好友同台竞技</p>
+            <button class="btn btn-danger" style="width:100%;margin-top:20px;" onclick="showMain()">返回大厅</button>
+        </div>
+    </div>
+    <!-- 多人联机房间页 -->
+    <div id="room-page" class="game-container hidden">
+        <div class="card">
+            <h2 class="title" id="game-title"></h2>
+            <div class="room-box">
+                <p class="info">当前金币：<span id="room-gold" class="gold"></span></p>
+                <input type="number" id="bet-num" class="input" placeholder="请输入押注金币数（≥100）" min="100" required>
+                <input type="text" id="room-id" class="input" placeholder="请输入房间号加入">
+                <button class="btn" onclick="createRoom()">创建房间</button>
+                <button class="btn btn-primary" onclick="joinRoom()">加入房间</button>
+                <button class="btn btn-danger" onclick="showGameMode(currentGame)">返回模式选择</button>
+            </div>
+        </div>
+    </div>
+    <!-- 游戏对局页 -->
+    <div id="play-page" class="game-container hidden">
+        <div class="card">
+            <h2 class="title" id="play-game-title"></h2>
+            <p class="info">押注金币：<span id="play-bet" class="gold"></span></p>
+            <p class="info">玩家列表：<span id="player-list" class="gold"></span></p>
+            <div id="game-content" style="margin: 30px 0;text-align: center;width: 100%;"></div>
+            <div class="operation-btn" id="game-operation"></div>
+            <button class="btn btn-danger" onclick="exitGame()">退出游戏</button>
+        </div>
+    </div>
+    <!-- 我的主页 -->
+    <div id="user-center-page" class="game-container hidden">
+        <div class="card">
+            <h2 class="title">👤 我的主页</h2>
+            <div class="user-center">
+                <div class="user-avatar">👑</div>
+                <div class="user-info">
+                    <h3 style="font-size:28px;color:#ffd700;" id="uc-name">昵称</h3>
+                    <p class="info">VIP等级：<span id="uc-vip" class="vip">V0</span></p>
+                    <p class="info">账号状态：<span style="color:#00d2ff;">正常✅</span></p>
+                </div>
+            </div>
+            <div class="user-data">
+                <div class="data-item">
+                    <p class="info">当前金币</p>
+                    <p style="font-size:24px;" id="uc-gold" class="gold">0</p>
+                </div>
+                <div class="data-item">
+                    <p class="info">累计充值</p>
+                    <p style="font-size:24px;" id="uc-total" class="gold">0</p>
+                </div>
+                <div class="data-item">
+                    <p class="info">当前胜率</p>
+                    <p style="font-size:24px;color:#00d2ff;">68%</p>
+                </div>
+            </div>
+            <div class="vip-rule">
+                <h3 class="sub-title" style="font-size:20px;">🎫 VIP等级规则</h3>
+                <p class="info">6000累计=V1 | 30000累计=V2 | 48888累计=V3 | 59888累计=V4</p>
+                <p class="info">64800累计=V5 | 78888累计=V6 | 88888累计=V7 | 90000累计=V8</p>
+                <p class="info">91780累计=V9 | 100000累计=V10</p>
+            </div>
+        </div>
+    </div>
+    <!-- 充值中心 -->
+    <div id="charge-page" class="game-container hidden">
+        <div class="card">
+            <h2 class="title">💎 充值中心（免费领取）</h2>
+            <p class="info">当前金币：<span id="charge-gold" class="gold"></span></p>
+            <p class="info">当前VIP：<span id="charge-vip" class="vip"></span> | 累计充值：<span id="charge-total" class="gold"></span></p>
+            <div class="charge-grid">
+                <div class="charge-item" onclick="chargeGold(6000)">6000金币</div>
+                <div class="charge-item" onclick="chargeGold(12800)">12800金币</div>
+                <div class="charge-item" onclick="chargeGold(28800)">28800金币</div>
+                <div class="charge-item" onclick="chargeGold(32800)">32800金币</div>
+                <div class="charge-item" onclick="chargeGold(45800)">45800金币</div>
+                <div class="charge-item" onclick="chargeGold(64800)">64800金币</div>
+            </div>
+        </div>
+    </div>
+    <!-- 底部导航 -->
+    <div class="footer-nav hidden" id="footer-nav">
+        <div class="nav-item" onclick="showMain()"><i class="fas fa-gamepad"></i><br>游戏主页</div>
+        <div class="nav-item" onclick="showUserCenter()"><i class="fas fa-user-circle"></i><br>我的主页</div>
+        <div class="nav-item" onclick="showCharge()"><i class="fas fa-diamond"></i><br>充值中心</div>
+    </div>
+    <script>
+        // 全局数据
+        let userData = {name: "", pwd: "", gold: 10000, vip: 0, totalGold: 10000};
+        let currentGame = "";
+        let currentBet = 0;
+        let playerList = [];
+        // 新增：NPC手牌数据
+        let npc1Poker = [], npc2Poker = [];
+        // 牌库数据
+        const pokerLib = ['A♠','2♠','3♠','4♠','5♠','6♠','7♠','8♠','9♠','10♠','J♠','Q♠','K♠',
+                           'A♥','2♥','3♥','4♥','5♥','6♥','7♥','8♥','9♥','10♥','J♥','Q♥','K♥',
+                           'A♣','2♣','3♣','4♣','5♣','6♣','7♣','8♣','9♣','10♣','J♣','Q♣','K♣',
+                           'A♦','2♦','3♦','4♦','5♦','6♦','7♦','8♦','9♦','10♦','J♦','Q♦','K♦',
+                           '大王','小王'];
+        const mahjongLib = ['1筒','2筒','3筒','4筒','5筒','6筒','7筒','8筒','9筒',
+                             '1条','2条','3条','4条','5条','6条','7条','8条','9条',
+                             '1万','2万','3万','4万','5万','6万','7万','8万','9万',
+                             '东风','西风','南风','北风','红中','发财','白板'];
+        let userPoker = [];
+        let userMahjong = [];
+        let lastOutPoker = {type: "", value: [], desc: ""};
+        // ========== 苹果兼容弹窗方法 ==========
+        function showTips(text) {
+            const box = document.getElementById('tipsBox');
+            box.innerHTML = text;
+            box.style.display = 'block';
+            setTimeout(() => box.style.display = 'none', 2000);
+        }
+        function showInputBox() {
+            document.getElementById('inputBox').style.display = 'block';
+            document.getElementById('inputVal').focus();
+        }
+        function confirmInput() {
+            currentBet = parseInt(document.getElementById('inputVal').value);
+            if(isNaN(currentBet) || currentBet <100 || currentBet > userData.gold){
+                showTips('押注金额无效！金币不足');
+            }else{
+                playerList = [userData.name, "NPC-陪玩①", "NPC-陪玩②"];
+                userData.gold -= currentBet;
+                saveUserData();
+                startGame();
+            }
+            document.getElementById('inputBox').style.display = 'none';
+        }
+        function cancelInput() {document.getElementById('inputBox').style.display = 'none';}
+        function showConfirmBox(text) {
+            document.getElementById('confirmText').innerText = text;
+            document.getElementById('confirmBox').style.display = 'block';
+        }
+        function confirmOk() {
+            userData.gold -= currentBet;
+            saveUserData();
+            updateUserInfo();
+            showTips(`❌ 游戏失败！扣除${currentBet}金币，当前金币：${userData.gold}`);
+            exitGame();
+            document.getElementById('confirmBox').style.display = 'none';
+        }
+        function confirmNo() {document.getElementById('confirmBox').style.display = 'none';}
+        // ========== 页面切换 ==========
+        function showRegister() {
+            hideAllPages();
+            document.getElementById('register-page').classList.remove('hidden');
+            document.getElementById('footer-nav').classList.add('hidden');
+        }
+        function showLogin() {
+            hideAllPages();
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('footer-nav').classList.add('hidden');
+        }
+        function showMain() {
+            hideAllPages();
+            document.getElementById('main-page').classList.remove('hidden');
+            document.getElementById('footer-nav').classList.remove('hidden');
+        }
+        function showGameMode(game) {
+            currentGame = game;
+            hideAllPages();
+            document.getElementById('mode-page').classList.remove('hidden');
+            document.getElementById('footer-nav').classList.remove('hidden');
+            let gameName = game === 'doudizhu' ? '斗地主' : game === 'majiang' ? '麻将' : game === 'caihonghei' ? '猜红黑' : '抛硬币';
+            document.getElementById('mode-title').innerText = `${gameName} ✦ 玩法选择`;
+        }
+        function startMultiGame() {
+            hideAllPages();
+            document.getElementById('room-page').classList.remove('hidden');
+            document.getElementById('footer-nav').classList.remove('hidden');
+            let gameName = currentGame === 'doudizhu' ? '斗地主' : currentGame === 'majiang' ? '麻将' : currentGame === 'caihonghei' ? '猜红黑' : '抛硬币';
+            document.getElementById('game-title').innerText = `${gameName} ✦ 多人联机`;
+            document.getElementById('room-gold').innerText = userData.gold;
+        }
+        function startGame() {
+            hideAllPages();
+            document.getElementById('play-page').classList.remove('hidden');
+            document.getElementById('footer-nav').classList.remove('hidden');
+            let gameName = currentGame === 'doudizhu' ? '斗地主' : currentGame === 'majiang' ? '麻将' : currentGame === 'caihonghei' ? '猜红黑' : '抛硬币';
+            document.getElementById('play-game-title').innerText = `${gameName} ✦ 游戏对局`;
+            document.getElementById('play-bet').innerText = currentBet;
+            document.getElementById('player-list').innerText = playerList.join(' | ');
+            initGameContent();
+        }
+        function showUserCenter() {
+            hideAllPages();
+            document.getElementById('user-center-page').classList.remove('hidden');
+            document.getElementById('footer-nav').classList.remove('hidden');
+            document.getElementById('uc-name').innerText = userData.name;
+            document.getElementById('uc-vip').innerText = `V${userData.vip}`;
+            document.getElementById('uc-gold').innerText = userData.gold;
+            document.getElementById('uc-total').innerText = userData.totalGold;
+        }
+        function showCharge() {
+            hideAllPages();
+            document.getElementById('charge-page').classList.remove('hidden');
+            document.getElementById('footer-nav').classList.remove('hidden');
+            document.getElementById('charge-gold').innerText = userData.gold;
+            document.getElementById('charge-vip').innerText = `V${userData.vip}`;
+            document.getElementById('charge-total').innerText = userData.totalGold;
+        }
+        function hideAllPages() {
+            const pages = ['register-page','login-page','main-page','mode-page','room-page','play-page','user-center-page','charge-page'];
+            pages.forEach(page => document.getElementById(page).classList.add('hidden'));
+        }
+        // ========== 账号核心 ==========
+        function register() {
+            const name = document.getElementById('reg-name').value.trim();
+            const pwd = document.getElementById('reg-pwd').value.trim();
+            const code = document.getElementById('reg-code').value.trim();
+            if(!name) return showTips('请输入用户名！');
+            if(pwd.length <6) return showTips('密码必须6位及以上！');
+            if(code !== 'ylm890kz') return showTips('激活码错误！');
+            if(localStorage.getItem(`user_${name}`)) return showTips('用户名已存在！');
+            
+            userData = {name, pwd, gold: 10000, vip: 0, totalGold: 10000};
+            saveUserData();
+            updateUserInfo();
+            showMain();
+            showTips(`注册成功！初始金币10000`);
+        }
+        function login() {
+            const name = document.getElementById('login-name').value.trim();
+            const pwd = document.getElementById('login-pwd').value.trim();
+            if(!name || !pwd) return showTips('用户名/密码不能为空！');
+            
+            const localData = localStorage.getItem(`user_${name}`);
+            if(!localData) return showTips('账号不存在！');
+            
+            userData = JSON.parse(localData);
+            if(userData.pwd !== pwd) return showTips('密码错误！');
+            
+            updateUserInfo();
+            showMain();
+            showTips(`登录成功！欢迎回来，${userData.name}`);
+        }
+        function logout() {showLogin();showTips('已安全退出登录');}
+        function saveUserData() {
+            localStorage.setItem(`user_${userData.name}`, JSON.stringify(userData));
+            localStorage.setItem('currentUser', userData.name);
+        }
+        function updateUserInfo() {
+            document.getElementById('user-name').innerText = userData.name;
+            document.getElementById('user-gold').innerText = userData.gold;
+            document.getElementById('user-vip').innerText = `V${userData.vip}`;
+            calcVIP();
+        }
+        function calcVIP() {
+            userData.vip = userData.totalGold >=100000 ?10 : userData.totalGold>=91780?9 : userData.totalGold>=90000?8 : userData.totalGold>=88888?7 : userData.totalGold>=78888?6 : userData.totalGold>=64800?5 : userData.totalGold>=59888?4 : userData.totalGold>=48888?3 : userData.totalGold>=30000?2 : userData.totalGold>=6000?1 :0;
+            saveUserData();
+        }
+        function chargeGold(num) {
+            userData.gold += num;
+            userData.totalGold += num;
+            calcVIP();
+            saveUserData();
+            updateUserInfo();
+            showCharge();
+            showTips(`✅ 充值成功！获得${num}金币`);
+        }
+        // ========== 斗地主核心【移除摸牌+点击选牌+出牌校验 + 新增NPC自动出牌】 ==========
+        function togglePokerSelect(e) {e.target.classList.toggle('selected');}
+        function getRandomArr(arr, num) {
+            let newArr = [...arr], res = [];
+            for(let i=0;i<num;i++){
+                let idx = Math.floor(Math.random() * newArr.length);
+                res.push(newArr[idx]);
+                newArr.splice(idx,1);
+            }
+            return res;
+        }
+        // 斗地主牌型合法性校验
+        function checkPokerValid(selectedCards) {
+            if (selectedCards.length === 0) return {valid: false, msg: '请选择要出的牌'};
+            const values = selectedCards.map(card => card.split('')[0]);
+            const uniqueValues = [...new Set(values)];
+            // 单张
+            if (selectedCards.length === 1) return {valid: true, type: 'single', desc: '单张'};
+            // 对子
+            if (selectedCards.length === 2 && uniqueValues.length === 1) return {valid: true, type: 'pair', desc: '对子'};
+            // 三张
+            if (selectedCards.length === 3 && uniqueValues.length === 1) return {valid: true, type: 'triple', desc: '三张'};
+            // 炸弹
+            if (selectedCards.length === 4 && uniqueValues.length === 1) return {valid: true, type: 'bomb', desc: '炸弹'};
+            // 王炸
+            if (selectedCards.length === 2 && selectedCards.includes('大王') && selectedCards.includes('小王')) return {valid: true, type: 'rocket', desc: '王炸'};
+            // 顺子校验
+            if (selectedCards.length >=5 && selectedCards.length <=12) {
+                const order = ['3','4','5','6','7','8','9','10','J','Q','K','A','2'];
+                const cardValues = selectedCards.map(card => {
+                    const val = card.split('')[0];
+                    return order.includes(val) ? val : null;
+                }).filter(v => v!==null);
+                if (cardValues.length !== selectedCards.length) return {valid: false, msg: '顺子不能包含王和2'};
+                const indexes = cardValues.map(v => order.indexOf(v)).sort((a,b) => a-b);
+                for (let i=0; i<indexes.length-1; i++) {
+                    if (indexes[i+1] - indexes[i] !== 1) return {valid: false, msg: '顺子牌型不连续'};
+                }
+                return {valid: true, type: 'straight', desc: '顺子'};
+            }
+            return {valid: false, msg: '牌型不合法，请重新选择'};
+        }
+        // 斗地主出牌 + 触发NPC自动出牌
+        function playPoker() {
+            const selectedCards = Array.from(document.querySelectorAll('.card-item.selected')).map(el => el.innerText);
+            const checkResult = checkPokerValid(selectedCards);
+            if (!checkResult.valid) return showTips(checkResult.msg);
+            // 跟牌规则校验
+            if (lastOutPoker.type && checkResult.type !== 'bomb' && checkResult.type !== 'rocket') {
+                if (checkResult.type !== lastOutPoker.type) return showTips(`需出【${lastOutPoker.desc}】类型的牌`);
+                if (selectedCards.length !== lastOutPoker.value.length) return showTips(`需出${lastOutPoker.value.length}张牌`);
+            }
+            // 移除出牌并更新手牌
+            selectedCards.forEach(card => {
+                const index = userPoker.indexOf(card);
+                if (index > -1) userPoker.splice(index, 1);
+            });
+            lastOutPoker = {type: checkResult.type, value: selectedCards, desc: checkResult.desc};
+            showTips(`✅ 出牌成功【${checkResult.desc}】：${selectedCards.join(' ')}`);
+            initGameContent();
+            // 出完牌判定胜利
+            if(userPoker.length === 0){
+                gameWin(3);
+                return;
+            }
+            // ========== 新增核心：玩家出牌后，NPC依次自动出牌 ==========
+            setTimeout(() => npcAutoPlay(1), 1200);
+        }
+        // NPC自动出牌核心逻辑 (1=NPC1  2=NPC2)
+        function npcAutoPlay(npcType) {
+            let npcPoker = npcType ===1 ? npc1Poker : npc2Poker;
+            let npcName = npcType ===1 ? "NPC-陪玩①" : "NPC-陪玩②";
+            if(npcPoker.length === 0){
+                showTips(`🎉 ${npcName}出完牌获胜！`);
+                userData.gold -= currentBet;
+                saveUserData();
+                updateUserInfo();
+                exitGame();
+                return;
+            }
+            // NPC智能匹配牌型：优先出同类型、同张数，无则出单张，有炸弹直接出
+            let outCards = [];
+            const checkBomb = npcPoker.filter(c=>{
+                const val = c.split('')[0];
+                return npcPoker.filter(x=>x.split('')[0]===val).length ===4;
+            });
+            const checkRocket = npcPoker.includes('大王') && npcPoker.includes('小王');
+            
+            // 优先级1：王炸通吃
+            if(checkRocket){
+                outCards = ['大王','小王'];
+            }
+            // 优先级2：炸弹压制
+            else if(checkBomb.length>0){
+                outCards = [checkBomb[0],checkBomb[1],checkBomb[2],checkBomb[3]];
+            }
+            // 优先级3：匹配上家牌型、张数
+            else if(lastOutPoker.type){
+                if(lastOutPoker.type === 'single') outCards = [npcPoker[0]];
+                else if(lastOutPoker.type === 'pair'){
+                    for(let i=0;i<npcPoker.length-1;i++){
+                        if(npcPoker[i].split('')[0] === npcPoker[i+1].split('')[0]){
+                            outCards = [npcPoker[i],npcPoker[i+1]];
+                            break;
+                        }
+                    }
+                }
+                else if(lastOutPoker.type === 'triple'){
+                    for(let i=0;i<npcPoker.length-2;i++){
+                        if(npcPoker[i].split('')[0] === npcPoker[i+1].split('')[0] && npcPoker[i].split('')[0] === npcPoker[i+2].split('')[0]){
+                            outCards = [npcPoker[i],npcPoker[i+1],npcPoker[i+2]];
+                            break;
+                        }
+                    }
+                }
+                // 无匹配牌型，默认出单张
+                if(outCards.length ===0) outCards = [npcPoker[0]];
+            }
+            // 无上家出牌，默认出单张
+            else{
+                outCards = [npcPoker[0]];
+            }
+            // 校验NPC出牌合法性并移除手牌
+            const check = checkPokerValid(outCards);
+            if(check.valid){
+                outCards.forEach(card => {
+                    const idx = npcPoker.indexOf(card);
+                    if(idx>-1) npcPoker.splice(idx,1);
+                });
+                lastOutPoker = {type:check.type,value:outCards,desc:check.desc};
+                showTips(`🤖 ${npcName}出牌【${check.desc}】：${outCards.join(' ')}`);
+                initGameContent();
+                // NPC1出完 → 调用NPC2出牌
+                if(npcType ===1 && npc2Poker.length>0){
+                    setTimeout(()=>npcAutoPlay(2),1200);
+                }
+            }
+        }
+        // ========== 麻将核心【点击选牌+碰杠校验】 ==========
+        function toggleMahjongSelect(e) {e.target.classList.toggle('selected');}
+        // 麻将碰牌校验
+        function pengMahjong() {
+            const selected = Array.from(document.querySelectorAll('.mahjong-item.selected')).map(el => el.innerText);
+            if(selected.length !==1) return showTips('碰牌需选择1张牌');
+            const target = selected[0];
+            const count = userMahjong.filter(m => m === target).length;
+            if(count <3) return showTips(`缺少${3-count}张${target}，无法碰牌`);
+            // 移除碰牌
+            userMahjong = userMahjong.filter(m => m !== target);
+            showTips(`✅ 碰牌成功！已移除3张${target}`);
+            initGameContent();
+        }
+        // 麻将杠牌校验
+        function gangMahjong() {
+            const selected = Array.from(document.querySelectorAll('.mahjong-item.selected')).map(el => el.innerText);
+            if(selected.length !==1) return showTips('杠牌需选择1张牌');
+            const target = selected[0];
+            const count = userMahjong.filter(m => m === target).length;
+            if(count <4) return showTips(`缺少${4-count}张${target}，无法杠牌`);
+            // 移除杠牌
+            userMahjong = userMahjong.filter(m => m !== target);
+            showTips(`✅ 杠牌成功！已移除4张${target}，额外摸1张牌`);
+            userMahjong.push(getRandomArr(mahjongLib,1)[0]);
+            initGameContent();
+        }
+        // 麻将胡牌
+        function huMahjong() {
+            showTips(`🎉 胡牌成功！`);
+            gameWin(4);
+        }
+        // ========== 通用游戏方法 ==========
+        function initGameContent() {
+            const gameContent = document.getElementById('game-content');
+            const gameOper = document.getElementById('game-operation');
+            gameContent.innerHTML = "";
+            gameOper.innerHTML = "";
+            // 斗地主初始化 - 新增NPC手牌分配
+            if(currentGame === 'doudizhu'){
+                // 开局一次性分配手牌：玩家17张、NPC1 17张、NPC2 17张
+                if(userPoker.length ===0 && npc1Poker.length ===0 && npc2Poker.length ===0){
+                    const allPoker = getRandomArr(pokerLib,54);
+                    userPoker = allPoker.slice(0,17);
+                    npc1Poker = allPoker.slice(17,34);
+                    npc2Poker = allPoker.slice(34,51);
+                }
+                let html = "<div><h3 class='sub-title'>♠️ 您的手牌</h3>";
+                userPoker.forEach(c => html += `<div class="card-item" onclick="togglePokerSelect(event)">${c}</div>`);
+                html += `</div><p class="info">剩余手牌：${userPoker.length}张</p>`;
+                html += `<p class="info">NPC①手牌：${npc1Poker.length}张 | NPC②手牌：${npc2Poker.length}张</p>`;
+                if(lastOutPoker.value.length>0){
+                    html += `<p class="info">上轮出牌：<span class="gold">${lastOutPoker.value.join(' ')}</span></p>`;
+                }
+                gameContent.innerHTML = html;
+                gameOper.innerHTML = `<button class="btn" onclick="playPoker()">确认出牌</button>
+                <button class="btn btn-danger" onclick="showConfirmBox(\`确定认输？将扣除${currentBet}押注金币\`)">认输扣金币</button>`;
+            }
+            // 麻将初始化
+            else if(currentGame === 'majiang'){
+                userMahjong = userMahjong.length>0 ? userMahjong : getRandomArr(mahjongLib,13);
+                let html = "<div><h3 class='sub-title'>🀄️ 您的手牌</h3>";
+                userMahjong.forEach(m => html += `<div class="mahjong-item" onclick="toggleMahjongSelect(event)">${m}</div>`);
+                html += `</div><p class="info">剩余手牌：${userMahjong.length}张</p>`;
+                gameContent.innerHTML = html;
+                gameOper.innerHTML = `<button class="btn" onclick="pengMahjong()">碰牌</button>
+                <button class="btn" onclick="gangMahjong()">杠牌</button>
+                <button class="btn" onclick="huMahjong()">胡牌领奖</button>
+                <button class="btn btn-danger" onclick="showConfirmBox(\`确定认输？将扣除${currentBet}押注金币\`)">认输扣金币</button>`;
+            }
+            // 猜红黑
+            else if(currentGame === 'caihonghei'){
+                gameContent.innerHTML = `<div style="font-size: 80px;margin:30px 0;">❤️⚫</div><h3 class='sub-title'>点击开奖，猜错将扣除${currentBet}金币</h3>`;
+                gameOper.innerHTML = `<button class="btn" onclick="guessRedBlack()">立即开奖</button>`;
+            }
+            // 抛硬币
+            else if(currentGame === 'coin'){
+                gameContent.innerHTML = `<div style="font-size: 80px;margin:30px 0;">🪙</div><h3 class='sub-title'>点击抛币，猜错将扣除${currentBet}金币</h3>`;
+                gameOper.innerHTML = `<button class="btn" onclick="tossCoin()">抛硬币</button>`;
+            }
+        }
+        // 游戏胜利奖励
+        function gameWin(multiple) {
+            const winGold = currentBet * multiple;
+            userData.gold += winGold;
+            saveUserData();
+            updateUserInfo();
+            showTips(`🎉 恭喜获胜！赢取${winGold}金币，当前金币：${userData.gold}`);
+            exitGame();
+        }
+        // 猜红黑判定
+        function guessRedBlack() {
+            const res = Math.random()>0.5 ? '❤️红' : '⚫黑';
+            document.getElementById('game-content').innerHTML = `<div style="font-size:80px;margin:30px 0;">${res}</div><h3 class='sub-title'>开奖结果：${res}</h3>`;
+            if(res === '❤️红'){
+                userData.gold += currentBet*2;
+                saveUserData();
+                updateUserInfo();
+                showTips(`🎉 猜对红！赢取${currentBet*2}金币`);
+            }else{
+                userData.gold -= currentBet;
+                saveUserData();
+                updateUserInfo();
+                showTips(`❌ 猜错黑！扣除${currentBet}金币`);
+            }
+        }
+        // 抛硬币判定
+        function tossCoin() {
+            const res = Math.random()>0.5 ? '正面✅' : '反面❌';
+            document.getElementById('game-content').innerHTML = `<div style="font-size:80px;margin:30px 0;">🪙</div><h3 class='sub-title'>结果：${res}</h3>`;
+            if(res === '正面✅'){
+                userData.gold += currentBet*2
+
+            saveUserData();
+            updateUserInfo();
+            showTips(`🎉 猜对正面！赢取${currentBet*2}金币`);
+        }else{
+            userData.gold -= currentBet;
+            saveUserData();
+            updateUserInfo();
+            showTips(`❌ 猜错反面！扣除${currentBet}金币`);
+        }
+    }
+    // 退出游戏返回大厅
+    function exitGame() {
+        userPoker = [];
+        userMahjong = [];
+        npc1Poker = [];
+        npc2Poker = [];
+        lastOutPoker = {type: "", value: [], desc: ""};
+        showMain();
+    }
+    // 多人联机占位方法
+    function createRoom() {
+        const bet = parseInt(document.getElementById('bet-num').value);
+        if(isNaN(bet) || bet <100 || bet > userData.gold){
+            showTips('押注金额无效，金币不足！');
+            return;
+        }
+        currentBet = bet;
+        userData.gold -= currentBet;
+        saveUserData();
+        const roomId = Math.floor(Math.random()*1000000);
+        showTips(`✅ 创建房间成功！房间号：${roomId}`);
+        document.getElementById('room-id').value = roomId;
+    }
+    function joinRoom() {
+        const roomId = document.getElementById('room-id').value.trim();
+        const bet = parseInt(document.getElementById('bet-num').value);
+        if(!roomId) return showTips('请输入房间号！');
+        if(isNaN(bet) || bet <100 || bet > userData.gold) return showTips('押注金额无效！');
+        currentBet = bet;
+        userData.gold -= currentBet;
+        saveUserData();
+        playerList = [userData.name, "玩家2", "玩家3"];
+        startGame();
+        showTips(`✅ 加入房间${roomId}成功！`);
+    }
+    // 页面初始化加载
+    window.onload = function() {
+        const currentUser = localStorage.getItem('currentUser');
+        if(currentUser){
+            const localData = localStorage.getItem(`user_${currentUser}`);
+            if(localData){
+                userData = JSON.parse(localData);
+                updateUserInfo();
+                showMain();
+                return;
+            }
+        }
+        showRegister();
+    };
+</script>
+</body>
+</html>
